@@ -623,6 +623,23 @@ function emptyDay(){
 }
 function emptyWeek(){ return [emptyDay(),emptyDay(),emptyDay(),emptyDay(),emptyDay()]; }
 
+function normalizeDay(d){
+  if(d && Array.isArray(d.moments) && d.moments.length === 4){
+    return {
+      moments: d.moments.map(m => ({
+        status: (m && m.status) ? m.status : null,
+        region: (m && m.region) ? m.region : null
+      })),
+      note: (d && typeof d.note === 'string') ? d.note : ''
+    };
+  }
+  return emptyDay();
+}
+function normalizeWeek(weekArr){
+  if(!Array.isArray(weekArr) || weekArr.length !== 5) return emptyWeek();
+  return weekArr.map(normalizeDay);
+}
+
 function dayStatusSummary(d){
   const statuses = d.moments.map(m => m.status);
   if(statuses.some(s => !s)) return null;
@@ -652,7 +669,7 @@ async function loadWeek(){
   const key = 'week:' + safeKey(state.currentEmployee) + ':' + isoDate(state.monday);
   try{
     const res = await storageGet(key);
-    state.weekData = res ? JSON.parse(res.value) : emptyWeek();
+    state.weekData = res ? normalizeWeek(JSON.parse(res.value)) : emptyWeek();
   }catch(e){ state.weekData = emptyWeek(); }
   state.loading = false;
   state.selectedDay = 0;
@@ -714,7 +731,7 @@ async function loadOverview(){
     const key = 'week:' + safeKey(name) + ':' + isoDate(state.overviewMonday);
     try{
       const res = await storageGet(key);
-      results[name] = res ? JSON.parse(res.value) : null;
+      results[name] = res ? normalizeWeek(JSON.parse(res.value)) : null;
     }catch(e){
       results[name] = null;
     }
