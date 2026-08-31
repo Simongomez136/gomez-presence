@@ -220,7 +220,7 @@ h1.title{
   display:flex;
   flex-direction:column;
 }
-.half{height:11px; background:var(--white);}
+.half{height:6px; background:var(--white);}
 .half-bureau{background:var(--bureau);}
 .half-clientele{background:var(--clientele);}
 .half-conge{background:var(--conge);}
@@ -247,12 +247,12 @@ h1.title{
 }
 .ov-detail-row{
   display:flex;
-  justify-content:space-between;
-  gap:10px;
-  font-size:13px;
+  flex-direction:column;
+  gap:3px;
 }
-.oday{color:var(--ink-soft); flex-shrink:0;}
-.oval{color:var(--ink); text-align:right;}
+.oday{color:var(--ink); font-weight:600; font-size:13px;}
+.oval{color:var(--ink-soft); font-size:12.5px;}
+.onote{color:var(--ink-soft); font-size:12px; font-style:italic;}
 
 /* ---------- week screen ---------- */
 .backlink{
@@ -444,6 +444,27 @@ h1.title{
 }
 .apply-week:hover{border-color:var(--cyan); color:var(--cyan-deep);}
 
+.note-block{
+  margin-top:20px;
+  padding-top:18px;
+  border-top:1px dashed var(--line);
+}
+.note-input{
+  display:block;
+  width:100%;
+  margin-top:10px;
+  padding:12px 14px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  font-family:'Inter',sans-serif;
+  font-size:14px;
+  color:var(--ink);
+  background:var(--white);
+  resize:vertical;
+  min-height:64px;
+}
+.note-input:focus{outline:2px solid var(--cyan); outline-offset:1px;}
+
 .detail-toggle{
   display:block;
   margin:16px auto 0;
@@ -540,12 +561,16 @@ const STATUSES = [
   {key:'conge', label:'Congé'}
 ];
 const REGIONS = ['Hainaut','Brabant Wallon','Namur','Liège','Luxembourg','Bruxelles'];
+const MOMENT_LABELS = ['Début matinée','Fin matinée','Début après-midi','Fin après-midi'];
 const STATUS_LABELS = {bureau:'Bureau', clientele:'Clientèle', conge:'Congé'};
 function slotText(slotObj){
   if(!slotObj || !slotObj.status) return 'Non renseigné';
   let txt = STATUS_LABELS[slotObj.status];
   if(slotObj.status === 'clientele' && slotObj.region) txt += ' — ' + slotObj.region;
   return txt;
+}
+function escapeHtml(str){
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 let state = {
@@ -587,16 +612,21 @@ function formatWeekLabel(monday){
 function safeKey(str){ return str.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
 function emptyDay(){
   return {
-    matin:{status:null, region:null},
-    apresmidi:{status:null, region:null}
+    moments:[
+      {status:null, region:null},
+      {status:null, region:null},
+      {status:null, region:null},
+      {status:null, region:null}
+    ],
+    note:''
   };
 }
 function emptyWeek(){ return [emptyDay(),emptyDay(),emptyDay(),emptyDay(),emptyDay()]; }
 
 function dayStatusSummary(d){
-  const m = d.matin.status, a = d.apresmidi.status;
-  if(!m || !a) return null;
-  if(m === a) return m;
+  const statuses = d.moments.map(m => m.status);
+  if(statuses.some(s => !s)) return null;
+  if(statuses.every(s => s === statuses[0])) return statuses[0];
   return 'partial';
 }
 
@@ -699,35 +729,60 @@ function toggleEmployeeDetail(name){
 }
 function completedCount(weekData){
   if(!weekData) return 0;
-  return weekData.filter(d => d.matin.status && d.apresmidi.status).length;
+  return weekData.filter(d => d.moments.every(m => m.status)).length;
 }
 
-function setSlotStatus(slot, statusKey){
+function setMomentStatus(idx, statusKey){
   const d = state.weekData[state.selectedDay];
-  d[slot].status = statusKey;
-  if(statusKey !== 'clientele') d[slot].region = null;
+  d.moments[idx].status = statusKey;
+  if(statusKey !== 'clientele') d.moments[idx].region = null;
   scheduleSave();
 }
-function setSlotRegion(slot, region){
+function setMomentRegion(idx, region){
   const d = state.weekData[state.selectedDay];
-  d[slot].region = region;
+  d.moments[idx].region = region;
   scheduleSave();
 }
-function copySlot(fromSlot, toSlot){
+function copyMoment(fromIdx, toIdx){
   const d = state.weekData[state.selectedDay];
-  d[toSlot] = {status:d[fromSlot].status, region:d[fromSlot].region};
+  d.moments[toIdx] = {status:d.moments[fromIdx].status, region:d.moments[fromIdx].region};
   scheduleSave();
 }
 function applyToWeek(){
   const src = state.weekData[state.selectedDay];
-  if(!src.matin.status || !src.apresmidi.status) return;
+  if(src.moments.some(m => !m.status)) return;
   for(let i=0;i<5;i++){
     state.weekData[i] = {
-      matin:{status:src.matin.status, region:src.matin.region},
-      apresmidi:{status:src.apresmidi.status, region:src.apresmidi.region}
+      moments: src.moments.map(m => ({status:m.status, region:m.region})),
+      note: src.note
     };
   }
   scheduleSave();
+}
+
+let noteSaveTimer = null;
+function onNoteInput(value){
+  const d = state.weekData[state.selectedDay];
+  d.note = value;
+  state.syncing = true;
+  updateSyncIndicator();
+  clearTimeout(noteSaveTimer);
+  noteSaveTimer = setTimeout(async () => {
+    const key = 'week:' + safeKey(state.currentEmployee) + ':' + isoDate(state.monday);
+    try{
+      await storageSet(key, JSON.stringify(state.weekData));
+      state.savedFlash = true;
+    }catch(e){ console.error('Erreur sauvegarde note', e); }
+    state.syncing = false;
+    updateSyncIndicator();
+    setTimeout(()=>{ state.savedFlash = false; updateSyncIndicator(); }, 1600);
+  }, 600);
+}
+function updateSyncIndicator(){
+  const el = document.querySelector('.sync-note');
+  if(!el) return;
+  el.textContent = state.syncing ? 'Enregistrement…' : (state.savedFlash ? 'Enregistré ✓' : '');
+  el.classList.toggle('saved', !!state.savedFlash);
 }
 
 function renderNameScreen(){
@@ -769,29 +824,30 @@ async function addEmployee(){
   await saveEmployees();
 }
 
-function slotBlockHTML(slot, label, dayObj){
-  const data = dayObj[slot];
-  const showCopy = slot === 'apresmidi' && dayObj.matin.status && !dayObj.apresmidi.status;
+function momentBlockHTML(idx, dayObj){
+  const data = dayObj.moments[idx];
+  const prev = idx > 0 ? dayObj.moments[idx-1] : null;
+  const showCopy = idx > 0 && prev.status && !data.status;
   return `
     <div class="slot-block">
       <div class="slot-head">
-        <span class="slot-label">${label}</span>
-        ${showCopy ? `<button class="copy-link" onclick="copySlot('matin','apresmidi')">Identique à la matinée</button>` : ''}
+        <span class="slot-label">${MOMENT_LABELS[idx]}</span>
+        ${showCopy ? `<button class="copy-link" onclick="copyMoment(${idx-1},${idx})">Identique à "${MOMENT_LABELS[idx-1]}"</button>` : ''}
       </div>
       <div class="status-grid">
-        ${STATUSES.map(s => `<button class="status-btn ${data.status===s.key ? 'sel-'+s.key : ''}" onclick="setSlotStatus('${slot}','${s.key}')">
+        ${STATUSES.map(s => `<button class="status-btn ${data.status===s.key ? 'sel-'+s.key : ''}" onclick="setMomentStatus(${idx},'${s.key}')">
           <span class="dot dot-${s.key}"></span>${s.label}
         </button>`).join('')}
       </div>
-      ${data.status === 'clientele' ? regionGridHTML(data.region, slot) : ''}
+      ${data.status === 'clientele' ? regionGridHTML(data.region, idx) : ''}
     </div>
   `;
 }
-function regionGridHTML(current, slot){
+function regionGridHTML(current, idx){
   return `<div class="region-wrap">
     <p class="region-hint">Dans quelle région ?</p>
     <div class="region-grid">
-      ${REGIONS.map(r => `<button class="region-chip ${current===r?'active':''}" onclick="setSlotRegion('${slot}','${r.replace(/'/g,"\\'")}')">${r}</button>`).join('')}
+      ${REGIONS.map(r => `<button class="region-chip ${current===r?'active':''}" onclick="setMomentRegion(${idx},'${r.replace(/'/g,"\\'")}')">${r}</button>`).join('')}
     </div>
   </div>`;
 }
@@ -799,12 +855,16 @@ function regionGridHTML(current, slot){
 function dayPanelHTML(){
   const d = state.weekData[state.selectedDay];
   const date = addDays(state.monday, state.selectedDay);
+  const allFilled = d.moments.every(m => m.status);
   return `
     <div class="day-panel">
       <p class="day-panel-title">${formatDayFull(date)}</p>
-      ${slotBlockHTML('matin', 'Matinée', d)}
-      ${slotBlockHTML('apresmidi', 'Après-midi', d)}
-      ${(d.matin.status && d.apresmidi.status) ? `<button class="apply-week" onclick="applyToWeek()">Appliquer cette journée à toute la semaine</button>` : ''}
+      ${d.moments.map((_, idx) => momentBlockHTML(idx, d)).join('')}
+      <div class="note-block">
+        <span class="slot-label">Note (optionnel)</span>
+        <textarea class="note-input" oninput="onNoteInput(this.value)" placeholder="Ex : RDV client à 14h, parti plus tôt…">${escapeHtml(d.note)}</textarea>
+      </div>
+      ${allFilled ? `<button class="apply-week" onclick="applyToWeek()">Appliquer cette journée à toute la semaine</button>` : ''}
     </div>
   `;
 }
@@ -863,14 +923,15 @@ function renderWeekScreen(){
 
 function overviewDayDotsHTML(weekData, dayIdx){
   const d = weekData ? weekData[dayIdx] : null;
-  const m = d ? d.matin.status : null;
-  const a = d ? d.apresmidi.status : null;
   return `
     <div class="ov-day">
       <span class="ov-dlabel">${DAYS_SHORT[dayIdx]}</span>
       <div class="half-pill">
-        <div class="half half-top ${m ? 'half-'+m : ''}"></div>
-        <div class="half half-bottom ${a ? 'half-'+a : ''}"></div>
+        ${[0,1,2,3].map(i => {
+          const m = d ? d.moments[i] : null;
+          const cls = m && m.status ? 'half-'+m.status : '';
+          return `<div class="half ${cls}"></div>`;
+        }).join('')}
       </div>
     </div>
   `;
@@ -894,10 +955,13 @@ function employeeCardHTML(name){
         <div class="ov-detail-list">
           ${DAYS.map((dayLabel, idx) => {
             const d = weekData ? weekData[idx] : null;
+            const moments = d ? d.moments : [null,null,null,null];
+            const line = moments.map(m => slotText(m)).join(' · ');
             return `
               <div class="ov-detail-row">
                 <span class="oday">${dayLabel}</span>
-                <span class="oval">${slotText(d ? d.matin : null)} · ${slotText(d ? d.apresmidi : null)}</span>
+                <span class="oval">${line}</span>
+                ${d && d.note ? `<span class="onote">📝 ${escapeHtml(d.note)}</span>` : ''}
               </div>
             `;
           }).join('')}
