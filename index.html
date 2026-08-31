@@ -348,6 +348,12 @@ h1.title{
   margin:0 0 18px;
 }
 
+.quickfill-block{
+  margin-bottom:20px;
+  padding-bottom:18px;
+  border-bottom:1px dashed var(--line);
+}
+
 .slot-block{margin-bottom:20px;}
 .slot-block + .slot-block{
   border-top:1px dashed var(--line);
@@ -841,6 +847,29 @@ async function addEmployee(){
   await saveEmployees();
 }
 
+function wholeDayStatus(d){
+  const statuses = d.moments.map(m => m.status);
+  return (statuses.every(s => s === statuses[0]) && statuses[0]) ? statuses[0] : null;
+}
+function wholeDayRegion(d){
+  if(wholeDayStatus(d) !== 'clientele') return null;
+  const regions = d.moments.map(m => m.region);
+  return regions.every(r => r === regions[0]) ? regions[0] : null;
+}
+function setWholeDayStatus(statusKey){
+  const d = state.weekData[state.selectedDay];
+  d.moments.forEach(m => {
+    m.status = statusKey;
+    m.region = statusKey === 'clientele' ? m.region : null;
+  });
+  scheduleSave();
+}
+function setWholeDayRegion(region){
+  const d = state.weekData[state.selectedDay];
+  d.moments.forEach(m => { m.region = region; });
+  scheduleSave();
+}
+
 function momentBlockHTML(idx, dayObj){
   const data = dayObj.moments[idx];
   const prev = idx > 0 ? dayObj.moments[idx-1] : null;
@@ -868,14 +897,32 @@ function regionGridHTML(current, idx){
     </div>
   </div>`;
 }
+function regionGridWholeDayHTML(current){
+  return `<div class="region-wrap">
+    <p class="region-hint">Dans quelle région ?</p>
+    <div class="region-grid">
+      ${REGIONS.map(r => `<button class="region-chip ${current===r?'active':''}" onclick="setWholeDayRegion('${r.replace(/'/g,"\\'")}')">${r}</button>`).join('')}
+    </div>
+  </div>`;
+}
 
 function dayPanelHTML(){
   const d = state.weekData[state.selectedDay];
   const date = addDays(state.monday, state.selectedDay);
   const allFilled = d.moments.every(m => m.status);
+  const wds = wholeDayStatus(d);
   return `
     <div class="day-panel">
       <p class="day-panel-title">${formatDayFull(date)}</p>
+      <div class="quickfill-block">
+        <div class="slot-head">
+          <span class="slot-label">Affecter à toute la journée</span>
+        </div>
+        <div class="pill-group">
+          ${STATUSES.map(s => `<button class="pill ${wds===s.key ? 'active-'+s.key : ''}" onclick="setWholeDayStatus('${s.key}')">${s.label}</button>`).join('')}
+        </div>
+        ${wds === 'clientele' ? regionGridWholeDayHTML(wholeDayRegion(d)) : ''}
+      </div>
       ${d.moments.map((_, idx) => momentBlockHTML(idx, d)).join('')}
       <div class="note-block">
         <span class="slot-label">Note (optionnel)</span>
