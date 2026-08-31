@@ -656,11 +656,15 @@ function dayStatusSummary(d){
 const DEFAULT_EMPLOYEES = ['Anthony','Thomas','Xavier'];
 
 async function loadEmployees(){
+  let fetchFailed = false;
   try{
     const res = await storageGet('employees:list');
     state.employees = res ? JSON.parse(res.value) : [];
-  }catch(e){ state.employees = []; }
-  if(state.employees.length === 0){
+  }catch(e){
+    state.employees = [];
+    fetchFailed = true;
+  }
+  if(state.employees.length === 0 && !fetchFailed){
     state.employees = [...DEFAULT_EMPLOYEES];
     await saveEmployees();
   }
