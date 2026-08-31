@@ -3,852 +3,598 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trajets de la semaine</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.17.1/firebase-app-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.17.1/firebase-firestore-compat.js"></script>
+<title>Carnet de tournée</title>
 <style>
-  :root {
-    --bg: #EFF7F4;
-    --panel: #FFFFFF;
-    --line: #DCEDE6;
-    --ink: #1F3B36;
-    --ink-dim: #5C7A73;
-    --ink-faint: #9AB3AC;
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap');
 
-    --camille: #FFC857;
-    --camille-ink: #6B4A00;
-    --simon: #FF6F91;
-    --simon-ink: #6B0F2A;
+:root{
+  --paper: #F3EFE3;
+  --paper-2: #EAE4D3;
+  --ink: #23324A;
+  --ink-soft: #4B5A70;
+  --line: #D8D0BB;
+  --ochre: #B67A1E;
+  --ochre-soft: #F0DFB8;
+  --rust: #A5502F;
+  --rust-soft: #EED2C2;
+  --green: #3B6255;
+  --green-soft: #D6E3DA;
+  --muted: #8A8270;
+  --white: #FFFDF8;
+  --shadow: 0 1px 0 rgba(35,50,74,0.06), 0 8px 20px -12px rgba(35,50,74,0.25);
+  --radius: 14px;
+}
 
-    --odile: #4CAF87;
-    --odile-bg: #DEF3E9;
-    --basile: #3E92CC;
-    --basile-bg: #DFEBF7;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: 'Karla', sans-serif;
-    font-variant-numeric: tabular-nums;
-    min-height: 100vh;
-    padding: 30px 16px 60px;
-  }
-  .wrap { max-width: 640px; margin: 0 auto; }
+*{ box-sizing: border-box; }
 
-  header { margin-bottom: 20px; }
-  h1 {
-    font-family: 'Baloo 2', cursive;
-    font-weight: 800;
-    font-size: 36px;
-    margin: 0 0 4px;
-    line-height: 1.05;
-    color: var(--ink);
-  }
-  .subtitle { color: var(--ink-dim); font-size: 14.5px; margin: 0; }
+body{
+  margin:0;
+  background: var(--paper);
+  background-image: linear-gradient(var(--line) 1px, transparent 1px);
+  background-size: 100% 34px;
+  color: var(--ink);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+}
 
-  .weeknav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--panel);
-    border: 2px solid var(--line);
-    border-radius: 16px;
-    padding: 10px 14px;
-    margin: 18px 0 18px;
-  }
-  .weeknav button {
-    background: var(--bg);
-    border: none;
-    color: var(--ink);
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    font-size: 17px;
-    cursor: pointer;
-    font-family: inherit;
-    font-weight: 700;
-  }
-  .weeknav button:hover { background: var(--line); }
-  .weekrange { font-size: 15px; color: var(--ink); font-weight: 700; text-align: center; font-family: 'Baloo 2', cursive; }
-  .weekrange .thisweek {
-    display: block;
-    font-size: 11.5px;
-    color: var(--ink-faint);
-    font-family: 'Karla', sans-serif;
-    font-weight: 600;
-    margin-top: 1px;
-  }
+.wrap{ max-width: 640px; margin: 0 auto; padding: 28px 18px 80px; }
 
-  .legend { display: flex; gap: 16px; margin-bottom: 16px; font-size: 13px; color: var(--ink-dim); flex-wrap: wrap; }
-  .legend .grp { display: flex; gap: 10px; }
-  .legend span.item { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
-  .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
-  .dot.camille { background: var(--camille); }
-  .dot.simon { background: var(--simon); }
-  .dot.odile { background: var(--odile); }
-  .dot.basile { background: var(--basile); }
+/* Header */
+.masthead{
+  display:flex; align-items:flex-end; justify-content:space-between;
+  border-bottom: 2px solid var(--ink); padding-bottom: 14px; margin-bottom: 10px;
+}
+.masthead h1{ font-family:'Fraunces', Georgia, serif; font-weight:600; font-size:30px; letter-spacing:-0.01em; margin:0 0 4px; }
+.masthead .schedule{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); }
+.gear-btn{
+  background:none; border:1px solid var(--ink); border-radius:999px;
+  width:38px; height:38px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:16px; color:var(--ink); flex-shrink:0;
+}
+.gear-btn:active{ transform: scale(0.94); }
 
-  .daytabs {
-    display: flex;
-    overflow-x: auto;
-    gap: 6px;
-    margin-bottom: 16px;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
-  .daytabs::-webkit-scrollbar { display: none; }
-  .daytab {
-    flex: 0 0 auto;
-    background: var(--panel);
-    border: 2px solid var(--line);
-    color: var(--ink-dim);
-    font-family: 'Baloo 2', cursive;
-    font-size: 17px;
-    font-weight: 700;
-    padding: 8px 14px;
-    cursor: pointer;
-    border-radius: 14px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    line-height: 1.25;
-  }
-  .daytab .d { font-size: 10px; font-family: 'Karla', sans-serif; font-weight: 600; color: var(--ink-faint); }
-  .daytab.active { color: var(--ink); border-color: var(--ink); background: #FFFDF4; }
-  .daytab .count {
-    font-family: 'Karla', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--ink-faint);
-  }
-  .daytab.active .count { color: var(--simon); }
+/* Date nav */
+.date-nav{
+  display:flex; align-items:center; justify-content:space-between;
+  background: var(--white); border:1px solid var(--line); border-radius: var(--radius);
+  padding: 10px 12px; margin-bottom: 20px; box-shadow: var(--shadow);
+}
+.date-nav-btn{
+  background: var(--paper-2); border:1px solid var(--line); border-radius:8px;
+  width:34px; height:34px; font-size:16px; cursor:pointer; color:var(--ink);
+  display:flex; align-items:center; justify-content:center;
+}
+.date-nav-btn:active{ transform: scale(0.94); }
+.date-nav-center{ text-align:center; flex:1; }
+.date-nav-center .big{ font-family:'Fraunces', Georgia, serif; font-weight:600; font-size:16.5px; text-transform:capitalize; }
+.date-nav-center .small{ font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--muted); margin-top:2px; }
+.today-pill{
+  background:none; border:none; color:var(--ochre); font-family:'IBM Plex Mono', monospace;
+  font-size:10px; text-decoration:underline; cursor:pointer; margin-top:3px;
+}
+.weekend-note{
+  font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--rust);
+  text-align:center; margin: -12px 0 18px;
+}
 
-  .empty {
-    padding: 34px 18px;
-    text-align: center;
-    color: var(--ink-dim);
-    font-size: 15px;
-    background: var(--panel);
-    border: 2px dashed var(--line);
-    border-radius: 16px;
-  }
+/* Section label */
+.section-label{
+  font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+  color:var(--muted); margin: 0 0 12px 2px; display:flex; align-items:center; gap:8px;
+}
+.section-label::after{ content:''; flex:1; height:1px; background: var(--line); }
 
-  .trajet {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 13px 14px;
-    background: var(--panel);
-    border: 2px solid var(--line);
-    border-radius: 14px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-  }
-  .trajet .time {
-    font-family: 'Baloo 2', cursive;
-    font-weight: 700;
-    font-size: 17px;
-    min-width: 50px;
-    color: var(--ink);
-  }
-  .trajet .time.notime {
-    font-family: 'Karla', sans-serif;
-    font-weight: 700;
-    font-size: 12px;
-    color: var(--ink-faint);
-    min-width: 66px;
-  }
-  .trajet .main { flex: 1; min-width: 120px; }
-  .trajet .label { font-size: 15px; font-weight: 600; }
-  .child-badge {
-    display: inline-block;
-    font-size: 11.5px;
-    font-weight: 700;
-    padding: 2px 9px;
-    border-radius: 999px;
-    margin-top: 5px;
-  }
-  .child-badge.odile { background: var(--odile-bg); color: var(--odile); }
-  .child-badge.basile { background: var(--basile-bg); color: var(--basile); }
-  .child-badge.lesdeux { background: #F1EAFB; color: #7B4FCB; }
+/* Cards */
+.card{
+  background: var(--white); border:1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 15px 16px; margin-bottom: 12px;
+}
+.card-head{ display:flex; align-items:baseline; justify-content:space-between; }
+.card-name{ font-family:'Fraunces', Georgia, serif; font-weight:600; font-size:18px; }
+.card-count{ font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--muted); }
 
-  .toggle {
-    display: flex;
-    border: 2px solid var(--line);
-    border-radius: 10px;
-    overflow: hidden;
-    flex: 0 0 auto;
-  }
-  .toggle button {
-    font-family: 'Karla', sans-serif;
-    font-size: 12.5px;
-    font-weight: 700;
-    border: none;
-    background: transparent;
-    color: var(--ink-dim);
-    padding: 8px 11px;
-    cursor: pointer;
-  }
-  .toggle button.on.camille { background: var(--camille); color: var(--camille-ink); }
-  .toggle button.on.simon { background: var(--simon); color: var(--simon-ink); }
+.period-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-top:10px; }
+.period-cell{
+  border:1px dashed var(--line); border-radius:9px; padding:7px 3px; text-align:center; cursor:pointer;
+  background: var(--paper-2);
+}
+.period-cell.filled{ border-style:solid; }
+.period-cell .ptime{ font-family:'IBM Plex Mono', monospace; font-size:9.5px; color:var(--ink-soft); }
+.period-cell .picon{ font-size:16px; margin:3px 0 1px; }
+.period-cell .ploc{ font-size:9.5px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.period-cell .pdash{ font-size:13px; color:var(--muted); margin:6px 0; }
 
-  .rowbtns { display: flex; gap: 2px; flex: 0 0 auto; }
-  .iconbtn {
-    background: none;
-    border: none;
-    color: var(--ink-faint);
-    cursor: pointer;
-    padding: 4px 6px;
-    font-size: 15px;
-    border-radius: 8px;
-  }
-  .iconbtn:hover { color: var(--ink); background: var(--bg); }
+.detail-line{
+  margin-top:10px; padding-top:9px; border-top:1px dashed var(--line);
+  font-size:12.5px; color:var(--ink-soft); display:flex; gap:8px; align-items:flex-start;
+}
+.detail-line b{ color: var(--ink); }
 
-  .addrow { margin-top: 4px; }
-  .addbtn {
-    background: #FFFDF4;
-    border: 2px dashed var(--camille);
-    color: var(--ink);
-    width: 100%;
-    padding: 13px;
-    border-radius: 14px;
-    font-family: 'Baloo 2', cursive;
-    font-weight: 700;
-    font-size: 15px;
-    cursor: pointer;
-    text-align: center;
-  }
-  .addbtn:hover { background: #FFF6DC; }
+/* Check-in panel */
+.checkin-panel{ background: var(--ink); border-radius: var(--radius); padding: 18px 16px 20px; color: var(--paper); box-shadow: var(--shadow); }
+.checkin-panel .who{
+  font-family:'IBM Plex Mono', monospace; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase;
+  color:#B9C2D1; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;
+}
+.change-link{ background:none; border:none; color:#D8DEE8; font-family:'IBM Plex Mono', monospace; font-size:11px; text-decoration:underline; cursor:pointer; padding:0; }
+.editing-note{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ochre-soft); margin-bottom:12px; }
 
-  .form {
-    background: var(--panel);
-    border: 2px solid var(--line);
-    border-radius: 14px;
-    padding: 14px;
-    margin-bottom: 10px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .form input, .form select {
-    font-family: 'Karla', sans-serif;
-    background: var(--bg);
-    border: 2px solid var(--line);
-    color: var(--ink);
-    border-radius: 9px;
-    padding: 9px 10px;
-    font-size: 14px;
-    font-weight: 600;
-  }
-  .form input[type=time] { width: 105px; }
-  .form input[type=text] { flex: 1; min-width: 140px; }
-  .form select { width: 108px; }
-  .form-actions { display: flex; gap: 8px; width: 100%; justify-content: flex-end; }
-  .form-actions button {
-    font-family: 'Baloo 2', cursive;
-    font-size: 14px;
-    font-weight: 700;
-    padding: 9px 16px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-  }
-  .btn-save { background: var(--ink); color: #fff; }
-  .btn-cancel { background: none; color: var(--ink-dim); border: 2px solid var(--line) !important; }
+.chip-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+.chip{
+  background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25); color: var(--paper);
+  padding:10px 16px; border-radius:999px; font-size:14px; font-weight:500; cursor:pointer; font-family:'Inter', sans-serif;
+}
+.chip:active{ transform: scale(0.96); }
 
-  .viewtoggle {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 16px;
-  }
-  .viewtoggle button {
-    font-family: 'Baloo 2', cursive;
-    font-weight: 700;
-    font-size: 14px;
-    background: var(--panel);
-    border: 2px solid var(--line);
-    color: var(--ink-dim);
-    padding: 8px 14px;
-    border-radius: 12px;
-    cursor: pointer;
-  }
-  .viewtoggle button.active { color: var(--ink); border-color: var(--ink); background: #FFFDF4; }
+.period-select-label{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:#B9C2D1; margin: 4px 0 8px; }
+.period-chips{ display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-bottom:8px; }
+.period-chip{
+  background: rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.22); border-radius:9px;
+  padding:8px 4px; text-align:center; cursor:pointer; color:var(--paper); font-family:'Inter', sans-serif;
+}
+.period-chip .pc-label{ font-size:11px; font-weight:600; }
+.period-chip .pc-time{ font-family:'IBM Plex Mono', monospace; font-size:9.5px; color:#AEB8C6; margin-top:2px; }
+.period-chip.active{ background: var(--ochre); border-color: var(--ochre); color:#24170A; }
+.period-chip.active .pc-time{ color:#5A3B0F; }
 
-  .week-day {
-    margin-bottom: 22px;
-  }
-  .week-day h2 {
-    font-family: 'Baloo 2', cursive;
-    font-size: 19px;
-    font-weight: 700;
-    margin: 0 0 10px;
-    color: var(--ink);
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-  }
-  .week-day h2 .wd-date { font-family: 'Karla', sans-serif; font-size: 12px; font-weight: 600; color: var(--ink-faint); }
-  .week-day .empty-mini {
-    color: var(--ink-faint);
-    font-size: 13.5px;
-    padding: 8px 2px;
-  }
-  .week-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    background: var(--panel);
-    border: 2px solid var(--line);
-    border-radius: 12px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-  }
-  .week-row .time { min-width: 46px; }
-  .week-row .time.notime { min-width: 60px; }
+.fullday-chip{
+  width:100%; margin-bottom: 16px; text-align:center; cursor:pointer;
+  border:1px solid rgba(255,255,255,0.25); border-radius:9px; padding:9px; font-size:13px; font-weight:600;
+  background: rgba(255,255,255,0.05); color: var(--paper); font-family:'Inter', sans-serif;
+}
+.fullday-chip.active{ background: var(--green); border-color: var(--green); }
+.fullday-chip .fc-hint{ display:block; font-weight:400; font-size:10.5px; color:#B9C2D1; margin-top:2px; }
+.fullday-chip.active .fc-hint{ color:#DDEDE5; }
 
-  .status { text-align: center; color: var(--ink-faint); font-size: 12.5px; margin-top: 24px; min-height: 16px; font-weight: 600; }
+.action-grid{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; }
+.action-btn{
+  display:flex; flex-direction:column; align-items:center; gap:6px; background: rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.2); border-radius:12px; padding:14px 6px; color: var(--paper);
+  font-family:'Inter', sans-serif; font-weight:600; font-size:12.5px; cursor:pointer; text-align:center;
+}
+.action-btn .emoji{ font-size:22px; }
+.action-btn:active{ transform: scale(0.96); background: rgba(255,255,255,0.14); }
 
-  .lock-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-  .lock-card {
-    background: var(--panel);
-    border: 2px solid var(--line);
-    border-radius: 20px;
-    padding: 34px 28px;
-    max-width: 320px;
-    width: 100%;
-    text-align: center;
-  }
-  .lock-emoji { font-size: 34px; margin-bottom: 6px; }
-  .lock-title {
-    font-family: 'Baloo 2', cursive;
-    font-weight: 800;
-    font-size: 24px;
-    margin: 0 0 6px;
-    color: var(--ink);
-  }
-  .lock-subtitle { color: var(--ink-dim); font-size: 14px; margin: 0 0 18px; }
-  #lockForm { display: flex; flex-direction: column; gap: 10px; }
-  #lockInput {
-    font-family: 'Karla', sans-serif;
-    background: var(--bg);
-    border: 2px solid var(--line);
-    color: var(--ink);
-    border-radius: 10px;
-    padding: 11px 14px;
-    font-size: 15px;
-    text-align: center;
-  }
-  #lockInput:focus { outline: none; border-color: var(--simon); }
-  #lockForm button {
-    font-family: 'Baloo 2', cursive;
-    font-weight: 700;
-    font-size: 15px;
-    background: var(--ink);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 11px;
-    cursor: pointer;
-  }
-  .lock-error {
-    color: var(--simon-ink);
-    font-size: 13px;
-    font-weight: 600;
-    min-height: 18px;
-    margin: 10px 0 0;
-  }
+.location-form{ margin-top:4px; }
+.location-form label{ display:block; font-family:'IBM Plex Mono', monospace; font-size:11px; color:#B9C2D1; margin-bottom:6px; }
+.location-form input{
+  width:100%; padding:12px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.08); color: var(--paper); font-family:'Inter', sans-serif; font-size:15px; margin-bottom:10px;
+}
+.location-form input::placeholder{ color:#8894A6; }
+.location-form input:focus{ outline: 2px solid var(--ochre); outline-offset:1px; }
+.form-row{ display:flex; gap:8px; }
+.btn-primary{ flex:1; background: var(--ochre); color:#24170A; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:14px; cursor:pointer; }
+.btn-primary:active{ opacity:0.85; }
+.btn-ghost{ background:none; border:1px solid rgba(255,255,255,0.3); color: var(--paper); border-radius:10px; padding:12px 16px; font-size:14px; cursor:pointer; }
+
+/* Onboarding */
+.onboard{ background: var(--white); border:1px solid var(--line); border-radius: var(--radius); padding:22px 18px; box-shadow: var(--shadow); }
+.onboard h2{ font-family:'Fraunces', Georgia, serif; font-size:22px; margin:0 0 6px; }
+.onboard p{ color: var(--ink-soft); font-size:14px; margin:0 0 16px; line-height:1.5; }
+.member-input-row{ display:flex; gap:8px; margin-bottom:14px; }
+.member-input-row input{ flex:1; padding:11px 12px; border-radius:10px; border:1px solid var(--line); font-size:15px; font-family:'Inter', sans-serif; background: var(--paper-2); }
+.member-input-row input:focus{ outline: 2px solid var(--ink); }
+.add-btn{ background: var(--ink); color: var(--paper); border:none; border-radius:10px; padding:0 16px; font-weight:700; cursor:pointer; }
+.member-list{ display:flex; flex-direction:column; gap:6px; }
+.member-row{ display:flex; align-items:center; justify-content:space-between; background: var(--paper-2); padding:9px 12px; border-radius:8px; font-size:14px; }
+.remove-btn{ background:none; border:none; color: var(--rust); font-size:13px; cursor:pointer; font-weight:600; }
+
+/* Modal */
+.modal-backdrop{ position:fixed; inset:0; background: rgba(35,50,74,0.45); display:flex; align-items:flex-end; justify-content:center; z-index:50; }
+.modal{ background: var(--paper); width:100%; max-width:640px; border-radius:18px 18px 0 0; padding:20px 18px 26px; box-shadow: 0 -8px 30px rgba(0,0,0,0.2); max-height:85vh; overflow-y:auto; }
+.modal h3{ font-family:'Fraunces', Georgia, serif; font-size:20px; margin:0 0 14px; display:flex; justify-content:space-between; align-items:center; }
+.close-btn{ background:none; border:none; font-size:20px; cursor:pointer; color: var(--ink-soft); }
+
+/* Toast */
+.toast{
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background: var(--ink); color: var(--paper);
+  padding:12px 20px; border-radius:999px; font-size:13.5px; font-weight:500; box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  z-index:60; font-family:'Inter', sans-serif; text-align:center; max-width: 90%;
+}
+
+.empty-state{ text-align:center; padding:30px 10px; color: var(--muted); font-size:14px; }
+.loading-screen{ display:flex; align-items:center; justify-content:center; height:60vh; color: var(--muted); font-family:'IBM Plex Mono', monospace; font-size:13px; }
+.refresh-note{ text-align:center; font-family:'IBM Plex Mono', monospace; font-size:10.5px; color: var(--muted); margin-top:18px; }
+
+@media (max-width:380px){
+  .period-cell .picon{ font-size:14px; }
+  .action-btn .emoji{ font-size:19px; }
+  .action-btn{ font-size:11px; padding:12px 4px; }
+  .pc-label{ font-size:10px; }
+}
 </style>
-<script>
-// ─────────────────────────────────────────────────────────
-// 1) Colle ici la config de TON projet Firebase
-//    (Firebase console → ⚙ Paramètres du projet → tes applications → config SDK)
-// ─────────────────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyDAXhrguOu72k9dq2d1ly4PbYlZXOK8rOc",
-  authDomain: "trajets-odile-basile.firebaseapp.com",
-  projectId: "trajets-odile-basile",
-  storageBucket: "trajets-odile-basile.firebasestorage.app",
-  messagingSenderId: "780382284685",
-  appId: "1:780382284685:web:b630524c92db4a8e426bc4"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const COLLECTION = 'trajets'; // toutes les données de l'app vivent dans cette collection
-
-// Mini-remplaçant de window.storage, mêmes méthodes get/set, mais branché sur Firestore
-const storage = {
-  async get(key) {
-    const doc = await db.collection(COLLECTION).doc(key).get();
-    if (!doc.exists) return null;
-    return { key, value: doc.data().value };
-  },
-  async set(key, value) {
-    await db.collection(COLLECTION).doc(key).set({ value });
-    return { key, value };
-  },
-  onChange(key, callback) {
-    return db.collection(COLLECTION).doc(key).onSnapshot(doc => {
-      if (doc.exists) callback(doc.data().value);
-    });
-  }
-};
-</script>
 </head>
 <body>
-
-<div id="lockScreen" class="lock-screen">
-  <div class="lock-card">
-    <div class="lock-emoji">🔒</div>
-    <h1 class="lock-title">Trajets de la semaine</h1>
-    <p class="lock-subtitle">Entrez le mot de passe pour continuer</p>
-    <form id="lockForm">
-      <input type="password" id="lockInput" placeholder="Mot de passe" autocomplete="off">
-      <button type="submit">Ouvrir</button>
-    </form>
-    <p class="lock-error" id="lockError"></p>
-  </div>
-</div>
-
-<div class="wrap" id="app" style="display:none">
-  <header>
-    <h1>Les trajets de la semaine 🚗</h1>
-    <p class="subtitle">Qui dépose Odile, qui récupère Basile — à régler le dimanche soir.</p>
-  </header>
-
-  <div class="weeknav">
-    <button id="prevWeek" aria-label="Semaine précédente">‹</button>
-    <div class="weekrange" id="weekRange"></div>
-    <button id="nextWeek" aria-label="Semaine suivante">›</button>
-  </div>
-
-  <div class="legend">
-    <div class="grp">
-      <span class="item"><span class="dot odile"></span>Odile</span>
-      <span class="item"><span class="dot basile"></span>Basile</span>
-    </div>
-    <div class="grp">
-      <span class="item"><span class="dot camille"></span>Camille</span>
-      <span class="item"><span class="dot simon"></span>Simon</span>
-    </div>
-  </div>
-
-  <div class="viewtoggle" id="viewToggle">
-    <button data-view="day" class="active">Par jour</button>
-    <button data-view="week">Vue d'ensemble</button>
-  </div>
-
-  <div class="daytabs" id="dayTabs"></div>
-  <div id="dayList"></div>
-
-  <div class="addrow" id="addRow"></div>
-
-  <div id="weekOverview"></div>
-
-  <div class="status" id="status"></div>
-</div>
+<div class="wrap" id="root"><div class="loading-screen">Chargement du carnet…</div></div>
 
 <script>
-const DAYS = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
-const DAYS_SHORT = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+const STATUS_META = {
+  bureau: { label:'Au bureau', icon:'🏢', color:'var(--green)', bg:'var(--green-soft)' },
+  route:  { label:'En route',  icon:'🚗', color:'var(--ochre)', bg:'var(--ochre-soft)' },
+  client: { label:'Chez un client', icon:'📍', color:'var(--rust)', bg:'var(--rust-soft)' }
+};
 
-let template = [];        // [{id, day(0-6), time:"HH:MM"|"", label, child:"Odile"|"Basile"|"Les deux"|""}]
-let assignments = {};     // {trajetId: "Camille"|"Simon"}
-const TEMPLATE_VERSION = 2; // bump this to force a re-seed of DEFAULT_TEMPLATE for everyone
-
-// day index: 0=Lundi ... 4=Vendredi
-const DEFAULT_TEMPLATE = [
-  ...[0,1,2,3,4].map(day => ({ id: crypto.randomUUID(), day, time: "08:15", label: "École — aller", child: "Les deux" })),
-  ...[0,1,2,3,4].map(day => ({ id: crypto.randomUUID(), day, time: "", label: "École — reprise", child: "Les deux" })),
-
-  { id: crypto.randomUUID(), day: 0, time: "18:00", label: "Piscine — aller", child: "Basile" },
-  { id: crypto.randomUUID(), day: 0, time: "18:30", label: "Piscine — retour", child: "Basile" },
-
-  { id: crypto.randomUUID(), day: 1, time: "17:40", label: "FM1 — aller", child: "Basile" },
-  { id: crypto.randomUUID(), day: 1, time: "18:30", label: "FM1 — retour", child: "Basile" },
-  { id: crypto.randomUUID(), day: 1, time: "18:30", label: "Piano — aller", child: "Odile" },
-  { id: crypto.randomUUID(), day: 1, time: "19:20", label: "Piano — retour", child: "Odile" },
-
-  { id: crypto.randomUUID(), day: 2, time: "17:30", label: "Récupération à Suarlée", child: "Les deux" },
-  { id: crypto.randomUUID(), day: 2, time: "18:40", label: "FM3 — aller", child: "Odile" },
-  { id: crypto.randomUUID(), day: 2, time: "19:30", label: "FM3 — retour", child: "Odile" },
-
-  { id: crypto.randomUUID(), day: 3, time: "17:00", label: "Boxe — aller (seule)", child: "Odile" },
-  { id: crypto.randomUUID(), day: 3, time: "18:00", label: "Boxe — retour (seule)", child: "Odile" },
-  { id: crypto.randomUUID(), day: 3, time: "18:30", label: "FM3 — aller", child: "Odile" },
-  { id: crypto.randomUUID(), day: 3, time: "19:20", label: "FM3 — retour", child: "Odile" },
+const PERIODS = [
+  { key:'am_start', label:'Début de journée', short:'Début', time:'8h00' },
+  { key:'am_end',   label:'Fin de matinée',    short:'Fin matin', time:'12h00' },
+  { key:'pm_start', label:"Début d'après-midi", short:'Début PM', time:'13h00' },
+  { key:'pm_end',   label:"Fin d'après-midi",   short:'Fin PM', time:'16h30' }
 ];
-let currentDay = new Date().getDay();
-currentDay = currentDay === 0 ? 6 : currentDay - 1;
-let weekMonday = getMonday(new Date());
-let addFormOpenFor = null;
-let currentView = 'day'; // 'day' | 'week'
 
-function getMonday(d) {
-  const date = new Date(d);
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
-  date.setHours(0,0,0,0);
-  return date;
+let state = {
+  loading: true,
+  team: [],
+  selectedDate: todayStr(),
+  dayData: {},
+  whoami: null,
+  showSettings: false,
+  pendingStatus: null,
+  selectedPeriod: autoPeriod(),
+  fullDay: false,
+  detailOpen: {},
+  toast: null,
+  saving: false
+};
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
-function weekKey(monday) { return monday.toISOString().slice(0,10); }
-function fmtDate(d) { return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }); }
-function isThisWeek(monday) { return weekKey(monday) === weekKey(getMonday(new Date())); }
+function autoPeriod(){
+  const now = new Date();
+  const h = now.getHours() + now.getMinutes()/60;
+  if (h < 10) return 'am_start';
+  if (h < 12.5) return 'am_end';
+  if (h < 14.5) return 'pm_start';
+  return 'pm_end';
+}
+function dateFromStr(s){
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function addDays(dateStr, n){
+  const d = dateFromStr(dateStr);
+  d.setDate(d.getDate() + n);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function frLongDate(dateStr){
+  const d = dateFromStr(dateStr);
+  let s = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function isWeekend(dateStr){
+  const day = dateFromStr(dateStr).getDay();
+  return day === 0 || day === 6;
+}
+function timeHM(ts){ return new Date(ts).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' }); }
 
-async function loadTemplate() {
-  let storedVersion = 0;
-  try {
-    const vRes = await storage.get('template-version');
-    if (vRes) storedVersion = parseInt(vRes.value, 10) || 0;
-  } catch (e) { storedVersion = 0; }
+async function safeGet(key, shared){
+  try { const r = await window.storage.get(key, shared); return r ? r.value : null; }
+  catch(e){ return null; }
+}
+async function safeSet(key, value, shared){
+  try { const r = await window.storage.set(key, value, shared); return !!r; }
+  catch(e){ return false; }
+}
 
-  if (storedVersion < TEMPLATE_VERSION) {
-    template = DEFAULT_TEMPLATE;
-    try {
-      await saveTemplate();
-      await storage.set('template-version', String(TEMPLATE_VERSION));
-    } catch (e) { /* ignore, will retry next load */ }
-    return;
+async function loadAll(){
+  const teamRaw = await safeGet('team', true);
+  if (teamRaw){ state.team = JSON.parse(teamRaw); }
+  else { state.team = ['Thomas', 'Xavier', 'Nicolas']; await saveTeam(); }
+
+  const dayRaw = await safeGet('day:' + state.selectedDate, true);
+  state.dayData = dayRaw ? JSON.parse(dayRaw) : {};
+
+  const whoRaw = await safeGet('whoami', false);
+  state.whoami = whoRaw || null;
+  if (state.whoami && !state.team.includes(state.whoami)) state.whoami = null;
+
+  state.loading = false;
+  render();
+}
+
+async function loadDayData(dateStr){
+  const dayRaw = await safeGet('day:' + dateStr, true);
+  return dayRaw ? JSON.parse(dayRaw) : {};
+}
+
+async function refreshQuiet(){
+  const teamRaw = await safeGet('team', true);
+  if (teamRaw) state.team = JSON.parse(teamRaw);
+  state.dayData = await loadDayData(state.selectedDate);
+  render();
+}
+setInterval(refreshQuiet, 30000);
+
+async function goToDate(newDate){
+  state.selectedDate = newDate;
+  state.selectedPeriod = (newDate === todayStr()) ? autoPeriod() : 'am_start';
+  state.fullDay = false;
+  state.pendingStatus = null;
+  state.detailOpen = {};
+  render();
+  state.dayData = await loadDayData(newDate);
+  render();
+}
+
+async function addCheckin(name, status, location){
+  state.saving = true;
+  const data = Object.assign({}, state.dayData);
+  if (!data[name]) data[name] = {};
+  data[name] = Object.assign({}, data[name]);
+  const rec = { status, location: location || '', ts: Date.now() };
+  let labelSuffix;
+  if (state.fullDay){
+    PERIODS.forEach(p => { data[name][p.key] = rec; });
+    labelSuffix = 'Journée entière';
+  } else {
+    data[name][state.selectedPeriod] = rec;
+    labelSuffix = PERIODS.find(p => p.key === state.selectedPeriod).label;
   }
-
-  try {
-    const res = await storage.get('trajets-template');
-    if (res) {
-      template = JSON.parse(res.value);
-    } else {
-      template = DEFAULT_TEMPLATE;
-      await saveTemplate();
-    }
-  } catch (e) {
-    template = DEFAULT_TEMPLATE;
-    try { await saveTemplate(); } catch (e2) { /* ignore */ }
-  }
-}
-async function saveTemplate() {
-  try { await storage.set('trajets-template', JSON.stringify(template)); }
-  catch (e) { setStatus("Enregistrement impossible, réessaie."); }
-}
-async function loadAssignments() {
-  try {
-    const res = await storage.get('assignments:' + weekKey(weekMonday));
-    assignments = res ? JSON.parse(res.value) : {};
-  } catch (e) { assignments = {}; }
-}
-async function saveAssignments() {
-  try { await storage.set('assignments:' + weekKey(weekMonday), JSON.stringify(assignments)); }
-  catch (e) { setStatus("Enregistrement impossible, réessaie."); }
-}
-function setStatus(msg) {
-  const el = document.getElementById('status');
-  el.textContent = msg;
-  if (msg) setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 2500);
+  state.dayData = data;
+  await safeSet('day:' + state.selectedDate, JSON.stringify(data), true);
+  state.saving = false;
+  state.pendingStatus = null;
+  const meta = STATUS_META[status];
+  state.toast = `✓ ${name} — ${labelSuffix} : ${meta.label}${location ? ' · ' + location : ''}`;
+  render();
+  setTimeout(() => { state.toast = null; render(); }, 3000);
 }
 
-function renderWeekRange() {
-  const sunday = new Date(weekMonday);
-  sunday.setDate(sunday.getDate() + 6);
-  document.getElementById('weekRange').innerHTML =
-    `${fmtDate(weekMonday)} – ${fmtDate(sunday)}` +
-    (isThisWeek(weekMonday) ? `<span class="thisweek">cette semaine</span>` : `<span class="thisweek">&nbsp;</span>`);
+async function saveTeam(){ await safeSet('team', JSON.stringify(state.team), true); }
+
+function escapeHtml(s){
+  return (s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 
-function renderWeekOverview() {
-  const el = document.getElementById('weekOverview');
-  el.innerHTML = '';
-  DAYS.forEach((name, i) => {
-    const d = new Date(weekMonday);
-    d.setDate(d.getDate() + i);
-    const dayTrajets = template
-      .filter(t => t.day === i)
-      .sort((a,b) => {
-        if (!a.time && !b.time) return 0;
-        if (!a.time) return 1;
-        if (!b.time) return -1;
-        return a.time.localeCompare(b.time);
-      });
+function render(){
+  const root = document.getElementById('root');
+  if (state.loading){ root.innerHTML = `<div class="loading-screen">Chargement du carnet…</div>`; return; }
 
-    const section = document.createElement('div');
-    section.className = 'week-day';
-    section.innerHTML = `<h2>${name} <span class="wd-date">${fmtDate(d)}</span></h2>`;
-
-    if (dayTrajets.length === 0) {
-      const p = document.createElement('div');
-      p.className = 'empty-mini';
-      p.textContent = 'Rien de prévu.';
-      section.appendChild(p);
-    } else {
-      dayTrajets.forEach(t => {
-        const assigned = assignments[t.id];
-        const childClass = t.child ? t.child.toLowerCase().replace(' ', '') : '';
-        const childBadge = t.child ? `<span class="child-badge ${childClass}">${t.child}</span>` : '';
-        const row = document.createElement('div');
-        row.className = 'week-row';
-        row.innerHTML = `
-          <div class="time${t.time ? '' : ' notime'}">${t.time || 'à définir'}</div>
-          <div class="main">
-            <div class="label">${escapeHtml(t.label)}</div>
-            ${childBadge}
-          </div>
-          <div class="toggle">
-            <button class="${assigned==='Camille' ? 'on camille' : ''}" data-person="Camille">Camille</button>
-            <button class="${assigned==='Simon' ? 'on simon' : ''}" data-person="Simon">Simon</button>
-          </div>
-        `;
-        row.querySelectorAll('.toggle button').forEach(b => {
-          b.onclick = () => setAssignment(t.id, b.dataset.person);
-        });
-        section.appendChild(row);
-      });
-    }
-    el.appendChild(section);
-  });
-}
-
-function renderDayTabs() {
-  const el = document.getElementById('dayTabs');
-  el.innerHTML = '';
-  DAYS.forEach((name, i) => {
-    const count = template.filter(t => t.day === i).length;
-    const d = new Date(weekMonday);
-    d.setDate(d.getDate() + i);
-    const btn = document.createElement('button');
-    btn.className = 'daytab' + (i === currentDay ? ' active' : '');
-    btn.innerHTML = `${DAYS_SHORT[i]}<span class="d">${d.getDate()}</span>` + (count ? `<span class="count">${count}</span>` : '');
-    btn.onclick = () => { currentDay = i; addFormOpenFor = null; render(); };
-    el.appendChild(btn);
-  });
-}
-
-function renderDayList() {
-  const list = document.getElementById('dayList');
-  list.innerHTML = '';
-  const dayTrajets = template
-    .filter(t => t.day === currentDay)
-    .sort((a,b) => {
-      if (!a.time && !b.time) return 0;
-      if (!a.time) return 1;
-      if (!b.time) return -1;
-      return a.time.localeCompare(b.time);
-    });
-
-  if (dayTrajets.length === 0 && addFormOpenFor !== 'new') {
-    const empty = document.createElement('div');
-    empty.className = 'empty';
-    empty.textContent = `Aucun trajet le ${DAYS[currentDay].toLowerCase()}. Ajoutez-en un ci-dessous.`;
-    list.appendChild(empty);
-  }
-
-  dayTrajets.forEach(t => {
-    if (addFormOpenFor === t.id) {
-      list.appendChild(buildForm(t));
-      return;
-    }
-    const row = document.createElement('div');
-    row.className = 'trajet';
-    const assigned = assignments[t.id];
-    const childClass = t.child ? t.child.toLowerCase().replace(' ', '') : '';
-    const childBadge = t.child ? `<span class="child-badge ${childClass}">${t.child}</span>` : '';
-    row.innerHTML = `
-      <div class="time${t.time ? '' : ' notime'}">${t.time || 'à définir'}</div>
-      <div class="main">
-        <div class="label">${escapeHtml(t.label)}</div>
-        ${childBadge}
+  let html = `
+    <div class="masthead">
+      <div>
+        <h1>Carnet de tournée</h1>
+        <div class="schedule">Lun–ven · 8h00–16h30</div>
       </div>
-      <div class="toggle">
-        <button class="${assigned==='Camille' ? 'on camille' : ''}" data-person="Camille">Camille</button>
-        <button class="${assigned==='Simon' ? 'on simon' : ''}" data-person="Simon">Simon</button>
-      </div>
-      <div class="rowbtns">
-        <button class="iconbtn" data-action="edit" title="Modifier">✎</button>
-        <button class="iconbtn" data-action="delete" title="Supprimer">✕</button>
-      </div>
-    `;
-    row.querySelectorAll('.toggle button').forEach(b => {
-      b.onclick = () => setAssignment(t.id, b.dataset.person);
-    });
-    row.querySelector('[data-action="edit"]').onclick = () => { addFormOpenFor = t.id; render(); };
-    row.querySelector('[data-action="delete"]').onclick = () => deleteTrajet(t.id);
-    list.appendChild(row);
-  });
-}
-
-function buildForm(existing) {
-  const wrap = document.createElement('div');
-  wrap.className = 'form';
-  const time = existing ? existing.time : '';
-  const label = existing ? existing.label : '';
-  const child = existing ? (existing.child || '') : '';
-  wrap.innerHTML = `
-    <input type="time" value="${time}" id="f-time">
-    <input type="text" placeholder="Ex. École, Judo…" value="${escapeAttr(label)}" id="f-label">
-    <select id="f-child">
-      <option value="" ${child==='' ? 'selected' : ''}>— Enfant —</option>
-      <option value="Odile" ${child==='Odile' ? 'selected' : ''}>Odile</option>
-      <option value="Basile" ${child==='Basile' ? 'selected' : ''}>Basile</option>
-      <option value="Les deux" ${child==='Les deux' ? 'selected' : ''}>Les deux</option>
-    </select>
-    <div class="form-actions">
-      <button class="btn-cancel">Annuler</button>
-      <button class="btn-save">${existing ? 'Enregistrer' : 'Ajouter'}</button>
+      <button class="gear-btn" data-action="toggle-settings" aria-label="Gérer l'équipe">⚙️</button>
     </div>
   `;
-  wrap.querySelector('.btn-cancel').onclick = () => { addFormOpenFor = null; render(); };
-  wrap.querySelector('.btn-save').onclick = async () => {
-    const t = wrap.querySelector('#f-time').value;
-    const l = wrap.querySelector('#f-label').value.trim();
-    const c = wrap.querySelector('#f-child').value;
-    if (!l) { setStatus('Indique au moins un nom de trajet.'); return; }
-    if (existing) {
-      existing.time = t; existing.label = l; existing.child = c;
-    } else {
-      template.push({ id: crypto.randomUUID(), day: currentDay, time: t, label: l, child: c });
-    }
-    await saveTemplate();
-    addFormOpenFor = null;
-    render();
-  };
-  setTimeout(() => wrap.querySelector('#f-label')?.focus(), 0);
-  return wrap;
-}
 
-function renderAddRow() {
-  const el = document.getElementById('addRow');
-  el.innerHTML = '';
-  if (addFormOpenFor === 'new') {
-    el.appendChild(buildForm(null));
+  html += renderDateNav();
+
+  if (state.team.length === 0){
+    html += renderOnboarding();
   } else {
-    const btn = document.createElement('button');
-    btn.className = 'addbtn';
-    btn.textContent = `+ Ajouter un trajet le ${DAYS[currentDay].toLowerCase()}`;
-    btn.onclick = () => { addFormOpenFor = 'new'; render(); };
-    el.appendChild(btn);
+    html += renderDashboard();
+    html += renderCheckinPanel();
+    html += `<div class="refresh-note">Mis à jour automatiquement toutes les 30 secondes</div>`;
+  }
+
+  if (state.showSettings) html += renderSettingsModal();
+  if (state.toast) html += `<div class="toast">${escapeHtml(state.toast)}</div>`;
+
+  root.innerHTML = html;
+
+  const memberInput = document.getElementById('member-input');
+  if (memberInput) memberInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doAddMember(); });
+  const locInput = document.getElementById('location-input');
+  if (locInput){
+    locInput.focus();
+    locInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSubmitLocation(); });
   }
 }
 
-async function setAssignment(id, person) {
-  assignments[id] = assignments[id] === person ? null : person;
-  render();
-  await saveAssignments();
-}
-
-async function deleteTrajet(id) {
-  template = template.filter(t => t.id !== id);
-  delete assignments[id];
-  await saveTemplate();
-  await saveAssignments();
-  render();
-}
-
-function escapeHtml(s) {
-  const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
-}
-function escapeAttr(s) {
-  return String(s).replace(/"/g, '&quot;');
-}
-
-// ── Synchro en direct : si l'un modifie, l'autre voit la mise à jour sans recharger ──
-let unsubAssignments = null;
-
-function subscribeAssignments() {
-  if (unsubAssignments) unsubAssignments();
-  unsubAssignments = storage.onChange('assignments:' + weekKey(weekMonday), value => {
-    assignments = JSON.parse(value);
-    render();
-  });
-}
-
-storage.onChange('trajets-template', value => {
-  template = JSON.parse(value);
-  render();
-});
-
-async function goWeek(delta) {
-  weekMonday.setDate(weekMonday.getDate() + delta * 7);
-  weekMonday = getMonday(weekMonday);
-  addFormOpenFor = null;
-  await loadAssignments();
-  subscribeAssignments();
-  render();
-}
-
-function render() {
-  renderWeekRange();
-
-  const isDayView = currentView === 'day';
-  document.getElementById('dayTabs').style.display = isDayView ? '' : 'none';
-  document.getElementById('dayList').style.display = isDayView ? '' : 'none';
-  document.getElementById('addRow').style.display = isDayView ? '' : 'none';
-  document.getElementById('weekOverview').style.display = isDayView ? 'none' : '';
-
-  if (isDayView) {
-    renderDayTabs();
-    renderDayList();
-    renderAddRow();
-  } else {
-    renderWeekOverview();
+function renderDateNav(){
+  const isToday = state.selectedDate === todayStr();
+  let html = `
+    <div class="date-nav">
+      <button class="date-nav-btn" data-action="prev-day">‹</button>
+      <div class="date-nav-center">
+        <div class="big">${frLongDate(state.selectedDate)}</div>
+        <div class="small">${state.selectedDate.split('-').reverse().join('/')}</div>
+        ${!isToday ? `<button class="today-pill" data-action="today-day">revenir à aujourd'hui</button>` : ''}
+      </div>
+      <button class="date-nav-btn" data-action="next-day">›</button>
+    </div>
+  `;
+  if (isWeekend(state.selectedDate)){
+    html += `<div class="weekend-note">Hors planning — le bureau est fermé le week-end (lun–ven, 8h00–16h30)</div>`;
   }
+  return html;
 }
 
-document.querySelectorAll('#viewToggle button').forEach(b => {
-  b.onclick = () => {
-    currentView = b.dataset.view;
-    addFormOpenFor = null;
-    document.querySelectorAll('#viewToggle button').forEach(x => x.classList.toggle('active', x === b));
-    render();
-  };
-});
+function renderOnboarding(){
+  return `
+    <div class="onboard">
+      <h2>Constituons votre équipe</h2>
+      <p>Ajoutez le prénom de chaque commercial (1 à 5). Ils pourront ensuite pointer eux-mêmes depuis leur téléphone.</p>
+      <div class="member-input-row">
+        <input id="member-input" type="text" placeholder="Prénom du commercial" maxlength="30">
+        <button class="add-btn" data-action="add-member">Ajouter</button>
+      </div>
+      ${state.team.length ? `<div class="member-list">${state.team.map(n => `
+        <div class="member-row"><span>${escapeHtml(n)}</span><button class="remove-btn" data-action="remove-member" data-name="${escapeHtml(n)}">Retirer</button></div>`).join('')}</div>` : ''}
+    </div>
+  `;
+}
 
-document.getElementById('prevWeek').onclick = () => goWeek(-1);
-document.getElementById('nextWeek').onclick = () => goWeek(1);
+function renderDashboard(){
+  const cards = state.team.map(name => {
+    const data = state.dayData[name] || {};
+    const filledCount = PERIODS.filter(p => data[p.key]).length;
+    const detailKey = state.detailOpen[name] || null;
+    const detailRec = detailKey ? data[detailKey] : null;
 
-async function init() {
-  await loadTemplate();
-  await loadAssignments();
-  subscribeAssignments();
+    const cells = PERIODS.map(p => {
+      const rec = data[p.key];
+      const meta = rec ? STATUS_META[rec.status] : null;
+      return `
+        <div class="period-cell ${rec ? 'filled' : ''}" style="${rec ? `border-color:${meta.color}; background:${meta.bg};` : ''}"
+             data-action="toggle-detail" data-name="${escapeHtml(name)}" data-period="${p.key}">
+          <div class="ptime">${p.time}</div>
+          ${rec ? `<div class="picon">${meta.icon}</div><div class="ploc">${rec.location ? escapeHtml(rec.location) : meta.label}</div>` : `<div class="pdash">—</div>`}
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="card">
+        <div class="card-head">
+          <div class="card-name">${escapeHtml(name)}</div>
+          <div class="card-count">${filledCount}/4 créneaux</div>
+        </div>
+        <div class="period-grid">${cells}</div>
+        ${detailRec ? `
+          <div class="detail-line">
+            <span>${STATUS_META[detailRec.status].icon}</span>
+            <span><b>${PERIODS.find(p=>p.key===detailKey).label}</b> — ${STATUS_META[detailRec.status].label}${detailRec.location ? ' · ' + escapeHtml(detailRec.location) : ''} <br>pointé à ${timeHM(detailRec.ts)}</span>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+
+  return `<div class="section-label">${state.selectedDate === todayStr() ? "Aujourd'hui" : 'Ce jour-là'}</div>${cards}`;
+}
+
+function renderCheckinPanel(){
+  const dateLabel = state.selectedDate === todayStr() ? null : frLongDate(state.selectedDate);
+
+  if (!state.whoami){
+    return `
+      <div class="section-label">Pointer</div>
+      <div class="checkin-panel">
+        <div class="who">Vous êtes ?</div>
+        <div class="chip-grid">${state.team.map(n => `<button class="chip" data-action="select-whoami" data-name="${escapeHtml(n)}">${escapeHtml(n)}</button>`).join('')}</div>
+      </div>
+    `;
+  }
+
+  const periodChips = PERIODS.map(p => `
+    <div class="period-chip ${(!state.fullDay && state.selectedPeriod === p.key) ? 'active' : ''}" data-action="select-period" data-period="${p.key}">
+      <div class="pc-label">${p.short}</div>
+      <div class="pc-time">${p.time}</div>
+    </div>
+  `).join('');
+
+  const periodPicker = `
+    <div class="period-select-label">Pour quel créneau ?</div>
+    <div class="period-chips">${periodChips}</div>
+    <div class="fullday-chip ${state.fullDay ? 'active' : ''}" data-action="toggle-fullday">
+      ☑ Journée entière <span class="fc-hint">même statut sur les 4 créneaux</span>
+    </div>
+  `;
+
+  if (state.pendingStatus){
+    const meta = STATUS_META[state.pendingStatus];
+    return `
+      <div class="section-label">Pointer</div>
+      <div class="checkin-panel">
+        <div class="who">${escapeHtml(state.whoami)} <button class="change-link" data-action="change-whoami">changer</button></div>
+        ${dateLabel ? `<div class="editing-note">Vous complétez le ${dateLabel}</div>` : ''}
+        ${periodPicker}
+        <div class="location-form">
+          <label>${meta.icon} ${meta.label} — précisez le lieu (ville, quartier, client…)</label>
+          <input id="location-input" type="text" placeholder="Ex : Namur, client Dupont" maxlength="60">
+          <div class="form-row">
+            <button class="btn-ghost" data-action="cancel-location">Annuler</button>
+            <button class="btn-primary" data-action="submit-location">Valider le pointage</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="section-label">Pointer</div>
+    <div class="checkin-panel">
+      <div class="who">${escapeHtml(state.whoami)} <button class="change-link" data-action="change-whoami">changer</button></div>
+      ${dateLabel ? `<div class="editing-note">Vous complétez le ${dateLabel}</div>` : ''}
+      ${periodPicker}
+      <div class="action-grid">
+        <button class="action-btn" data-action="status-bureau"><span class="emoji">🏢</span>Au bureau</button>
+        <button class="action-btn" data-action="status-route-open"><span class="emoji">🚗</span>En route</button>
+        <button class="action-btn" data-action="status-client-open"><span class="emoji">📍</span>Chez un client</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderSettingsModal(){
+  return `
+    <div class="modal-backdrop" data-action="close-settings-backdrop">
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>Équipe <button class="close-btn" data-action="toggle-settings">✕</button></h3>
+        <div class="member-input-row">
+          <input id="member-input" type="text" placeholder="Ajouter un commercial" maxlength="30">
+          <button class="add-btn" data-action="add-member">Ajouter</button>
+        </div>
+        ${state.team.length ? `<div class="member-list">${state.team.map(n => `
+          <div class="member-row"><span>${escapeHtml(n)}</span><button class="remove-btn" data-action="remove-member" data-name="${escapeHtml(n)}">Retirer</button></div>`).join('')}</div>` : `<div class="empty-state">Aucun commercial pour l'instant.</div>`}
+      </div>
+    </div>
+  `;
+}
+
+async function doAddMember(){
+  const input = document.getElementById('member-input');
+  const val = (input.value || '').trim();
+  if (!val || state.team.includes(val) || state.team.length >= 8) { if(input) input.value=''; return; }
+  state.team.push(val);
+  await saveTeam();
   render();
 }
-
-// ── Verrou par mot de passe (côté client uniquement, dissuasif pas incassable) ──
-const APP_PASSWORD = "Zaska";
-const UNLOCK_KEY = "trajets-unlocked";
-
-function startApp() {
-  document.getElementById('lockScreen').style.display = 'none';
-  document.getElementById('app').style.display = '';
-  init();
+async function doRemoveMember(name){
+  state.team = state.team.filter(n => n !== name);
+  await saveTeam();
+  if (state.whoami === name){ state.whoami = null; await safeSet('whoami', '', false); }
+  render();
+}
+async function doSelectWhoami(name){
+  state.whoami = name;
+  await safeSet('whoami', name, false);
+  render();
+}
+async function doSubmitLocation(){
+  const input = document.getElementById('location-input');
+  const val = (input.value || '').trim();
+  await addCheckin(state.whoami, state.pendingStatus, val);
 }
 
-if (localStorage.getItem(UNLOCK_KEY) === 'true') {
-  startApp();
-} else {
-  document.getElementById('lockForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const val = document.getElementById('lockInput').value.trim();
-    if (val === APP_PASSWORD) {
-      localStorage.setItem(UNLOCK_KEY, 'true');
-      startApp();
-    } else {
-      document.getElementById('lockError').textContent = "Mot de passe incorrect.";
-      document.getElementById('lockInput').value = '';
-      document.getElementById('lockInput').focus();
-    }
-  });
-}
+document.getElementById('root').addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  const name = el.dataset.name;
+  const period = el.dataset.period;
 
+  switch(action){
+    case 'toggle-settings': state.showSettings = !state.showSettings; render(); break;
+    case 'close-settings-backdrop': state.showSettings = false; render(); break;
+    case 'add-member': doAddMember(); break;
+    case 'remove-member': doRemoveMember(name); break;
+    case 'select-whoami': doSelectWhoami(name); break;
+    case 'change-whoami': state.whoami = null; safeSet('whoami', '', false); render(); break;
+    case 'prev-day': goToDate(addDays(state.selectedDate, -1)); break;
+    case 'next-day': goToDate(addDays(state.selectedDate, 1)); break;
+    case 'today-day': goToDate(todayStr()); break;
+    case 'select-period': state.selectedPeriod = period; state.fullDay = false; render(); break;
+    case 'toggle-fullday': state.fullDay = !state.fullDay; render(); break;
+    case 'status-bureau': addCheckin(state.whoami, 'bureau', ''); break;
+    case 'status-route-open': state.pendingStatus = 'route'; render(); break;
+    case 'status-client-open': state.pendingStatus = 'client'; render(); break;
+    case 'submit-location': doSubmitLocation(); break;
+    case 'cancel-location': state.pendingStatus = null; render(); break;
+    case 'toggle-detail':
+      state.detailOpen[name] = (state.detailOpen[name] === period) ? null : period;
+      render();
+      break;
+  }
+});
+
+loadAll();
 </script>
 </body>
 </html>
